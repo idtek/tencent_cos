@@ -33,4 +33,8 @@ class TencentCos {
       'localPath': localPath,
     });
   }
+
+  static void setMethodCallHandler(Future<dynamic> handler(MethodCall call)) {
+    _channel.setMethodCallHandler(handler);
+  }
 }
