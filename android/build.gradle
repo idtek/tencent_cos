@@ -1,0 +1,45 @@
+group 'com.silbermond.tencent_cos'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+         // 添加如下 maven 仓库地址
+        maven {
+            url "https://dl.bintray.com/tencentqcloudterminal/maven"
+        }
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven {
+            url "https://dl.bintray.com/tencentqcloudterminal/maven"
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 16
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation 'com.tencent.qcloud:cosxml:5.4.+'
+}
