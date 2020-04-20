@@ -52,7 +52,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   @Override
-  public void onMethodCall(MethodCall call, Result result) {
+  public void onMethodCall(MethodCall call, final Result result) {
     if (call.method.equals("TencentCos.uploadFile")) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "tencent_cos");
         LocalSessionCredentialProvider localCredentialProvider = new LocalSessionCredentialProvider(call.<String>argument("secretId"),
