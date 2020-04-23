@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
+
+typedef Future<dynamic> EventHandler(Map<String, dynamic> event);
+
 class TencentCos {
-  static const MethodChannel _channel =
-      const MethodChannel('tencent_cos');
+  static const MethodChannel _channel = const MethodChannel('tencent_cos');
+  static EventHandler _onUploadProcess;
+  static EventHandler _onDownloadProcess;
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
@@ -61,4 +65,23 @@ class TencentCos {
   static void setMethodCallHandler(Future<dynamic> handler(MethodCall call)) {
     _channel.setMethodCallHandler(handler);
   }
+
+  static void addProgressHandler({EventHandler onUploadProcess, EventHandler onDownloadProcess,}) {
+    _onUploadProcess = onUploadProcess;
+    _onDownloadProcess = onDownloadProcess;
+    _channel.setMethodCallHandler(_handleMethod);
+  }
+  
+  static Future<Null> _handleMethod(MethodCall call) async {
+    print('TencentCos' + "_handleMethod:");
+
+    switch (call.method) {
+      case "onProgress":
+        return _onUploadProcess(call.arguments.cast<String, dynamic>());
+      case "onOpenNotification":
+        return _onDownloadProcess(call.arguments.cast<String, dynamic>());
+      default:
+        throw new UnsupportedError("Unrecognized Event");
+    }
+  } 
 }
