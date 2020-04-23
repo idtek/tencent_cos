@@ -34,6 +34,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
   Registrar registrar;
   MethodChannel channel;
   Context context;
+  String TAG = "TencentCosPlugin";
 
   @Override
   public void onAttachedToEngine( FlutterPluginBinding flutterPluginBinding) {
@@ -104,22 +105,26 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
         cosxmlUploadTask.setCosXmlProgressListener(new CosXmlProgressListener() {
 
             @Override
-            public void onProgress(long complete, long target) {
+            public void onProgress(final long complete, final long target) {
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        long progress = complete * 100 / target;
+                        final HashMap<String, Object> data = new HashMap<>();
+                        data.put("progress", (int) progress);
+                        data.put("localPath", localPath);
                         channel.invokeMethod("onProgress", data);
                     }
                 });
 
-                Log.e("TencentCosPlugin", "onProgress =${progress * 100.0 / max}%");
+                Log.i(TAG, "onProgress =" + (complete * 100 / target) + "%");
             }
         });
         //设置返回结果回调
         cosxmlUploadTask.setCosXmlResultListener(new CosXmlResultListener() {
             @Override
             public void onSuccess(CosXmlRequest request, CosXmlResult httPesult) {
-                Log.d("TencentCosPlugin", "Success: " + httPesult.printResult());
+                Log.i(TAG, "Success: " + httPesult.printResult());
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -130,7 +135,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
 
             @Override
             public void onFail(CosXmlRequest request, CosXmlClientException exception, CosXmlServiceException serviceException) {
-                Log.d("TencentCosPlugin", "Failed: " + (exception.toString() + serviceException.toString()));
+                Log.i(TAG, "Failed: " + (exception.toString() + serviceException.toString()));
                 data.put("message", (exception.toString() + serviceException.toString()));
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
@@ -143,16 +148,20 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
         });
     } else if (call.method.equals("TencentCos.downloadFile")) {
         String saveDir = call.argument("saveDir");
-        String fileName = call.argument("fileName");
-        //上传文件
+        final String fileName = call.argument("fileName");
+        //下载文件
         COSXMLDownloadTask cosxmlDownloadTask = transferManager.download(context, bucket, cosPath, saveDir, fileName);
         cosxmlDownloadTask.setCosXmlProgressListener(new CosXmlProgressListener() {
             @Override
-            public void onProgress(final long complete, long target) {
+            public void onProgress(final long complete, final long target) {
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        channel.invokeMethod("downloadProgress", complete);
+                        long progress = complete * 100 / target;
+                        final HashMap<String, Object> data = new HashMap<>();
+                        data.put("progress",(int) progress);
+                        data.put("fileName", fileName);
+                        channel.invokeMethod("downloadProgress", data);
                     }
                 });
 
@@ -160,7 +169,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
         });
 
         final HashMap<String, Object> data = new HashMap<>();
-        data.put("localPath", fileName);
+        data.put("savaPath", saveDir + fileName);
         data.put("cosPath", cosPath);
         cosxmlDownloadTask.setCosXmlResultListener(new CosXmlResultListener() {
             @Override
