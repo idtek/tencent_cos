@@ -73,12 +73,12 @@ class TencentCos {
   }
   
   static Future<Null> _handleMethod(MethodCall call) async {
-    print('TencentCos' + "_handleMethod:");
+    print('TencentCos' + "_handleMethod:" + call.method);
 
     switch (call.method) {
-      case "onProgress":
+      case "onUploadProgress":
         return _onUploadProcess(call.arguments.cast<String, dynamic>());
-      case "onOpenNotification":
+      case "onDownLoadProgress":
         return _onDownloadProcess(call.arguments.cast<String, dynamic>());
       default:
         throw new UnsupportedError("Unrecognized Event");
