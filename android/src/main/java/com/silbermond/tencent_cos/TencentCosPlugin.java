@@ -109,15 +109,14 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        // Log.i(TAG, " onProgress =" + (complete * 100 / target) + "%");
                         long progress = complete * 100 / target;
                         final HashMap<String, Object> data = new HashMap<>();
                         data.put("progress", (int) progress);
                         data.put("localPath", localPath);
-                        channel.invokeMethod("onProgress", data);
+                        channel.invokeMethod("onUploadProgress", data);
                     }
                 });
-
-                Log.i(TAG, "onProgress =" + (complete * 100 / target) + "%");
             }
         });
         //设置返回结果回调
@@ -198,7 +197,6 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
         result.notImplemented();
     }
   }
-
 
   @Override
   public void onDetachedFromEngine(FlutterPluginBinding binding) {
