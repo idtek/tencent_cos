@@ -39,6 +39,7 @@ class TencentCos {
   //cosPath:并非完整路径，而是dev/fileName.fileType
   //saveDir存储的文件夹路径
   //fileName存储本地的文件名
+  // ios端参数设置问题，因此此方法只能在Android端调用
   static Future<dynamic> downloadByCos(
       String region,
       String appid,
