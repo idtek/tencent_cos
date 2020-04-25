@@ -51,6 +51,7 @@
     QCloudCOSXMLEndPoint* endpoint = [[QCloudCOSXMLEndPoint alloc] init];
     endpoint.regionName = region;//服务地域名称，可用的地域请参考注释
     configuration.endpoint = endpoint;
+    configuration.timeoutInterval = 10000;
 
     [QCloudCOSXMLService registerDefaultCOSXMLWithConfiguration:configuration];
     [QCloudCOSTransferMangerService registerDefaultCOSTransferMangerWithConfiguration:configuration];
@@ -81,14 +82,14 @@
 //            [self.channel invokeMethod:@"onSuccess" arguments:data];
             result(data);
         }else{
-            [data setValue: error.domain forKey:@"message"];
-            result(FlutterMethodNotImplemented);
+            NSMutableDictionary *err = [NSMutableDictionary dictionary];
+            result(err);
 //            [self.channel invokeMethod:@"onFailed" arguments:data];
         }
 
     }];
     [[QCloudCOSTransferMangerService defaultCOSTransferManager] UploadObject:put];
-  } else if ([@"TencentCos.downloadFile" isEqualToString:call.method]) {
+  } else if ([@"TencentCos.downloadFile" isEqualToString:call.method]) { 
       self.arguments =   [call arguments];
 //      NSString *appid = self.arguments[@"appid"];
 //      NSString *region = self.arguments[@"region"];

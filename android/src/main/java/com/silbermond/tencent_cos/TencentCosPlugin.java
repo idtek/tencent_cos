@@ -79,6 +79,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
       QCloudCredentialProvider credentialProvider = new ShortTimeCredentialProvider(call.<String>argument("secretId"), call.<String>argument("secretKey"), 300);
       TransferConfig transferConfig = new TransferConfig.Builder().build();
       CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true);
+      builder.setSocketTimeout(10000);
       //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
       CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig(builder);
       CosXmlService cosXmlService = new CosXmlService(registrar.context(), serviceConfig, credentialProvider);
@@ -133,13 +134,13 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
             }
 
             @Override
-            public void onFail(CosXmlRequest request, CosXmlClientException exception, CosXmlServiceException serviceException) {
-                Log.i(TAG, "Failed: " + (exception.toString() + serviceException.toString()));
-                data.put("message", (exception.toString() + serviceException.toString()));
+            public void onFail(CosXmlRequest request, CosXmlClientException exception, CosXmlServiceException serviceException) {            
+                final HashMap<String, Object> error = new HashMap<>();               
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        result.error("failed", "failed", "failed");
+                        //result.error前端没catch到，因此同样用success，但内容为空
+                        result.success(error);
                     }
                 });
 
