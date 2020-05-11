@@ -35,6 +35,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
   MethodChannel channel;
   Context context;
   String TAG = "TencentCosPlugin";
+  final HashMap<String, COSXMLUploadTask> uploads = new HashMap<>();
 
   @Override
   public void onAttachedToEngine( FlutterPluginBinding flutterPluginBinding) {
@@ -71,34 +72,31 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
 
   @Override
   public void onMethodCall(MethodCall call, final Result result) {
-      String region = call.argument("region");
-      String appid = call.argument("appid");
-      String bucket = call.argument("bucket");
-      final String cosPath = call.argument("cosPath");
-
-      QCloudCredentialProvider credentialProvider = new ShortTimeCredentialProvider(call.<String>argument("secretId"), call.<String>argument("secretKey"), 300);
-      TransferConfig transferConfig = new TransferConfig.Builder().build();
-      CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true);
-      builder.setSocketTimeout(10000);
-      //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
-      CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig(builder);
-      CosXmlService cosXmlService = new CosXmlService(registrar.context(), serviceConfig, credentialProvider);
-      //初始化 TransferManager
-      TransferManager transferManager = new TransferManager(cosXmlService, transferConfig);
-
+    Log.i(TAG, "jyjyjy--- onMethodCall =" + call.method);
     if (call.method.equals("TencentCos.uploadFile")) {
         if (channel == null && registrar != null) {
             channel = new MethodChannel(registrar.messenger(), "tencent_cos");
         }
-//        final MethodChannel channel = new MethodChannel(registrar.messenger(), "tencent_cos");
-        // LocalSessionCredentialProvider localCredentialProvider = new LocalSessionCredentialProvider(call.<String>argument("secretId"),
-        //         call.<String>argument("secretKey"), call.<String>argument("sessionToken"),
-        //         Long.parseLong(call.argument("expiredTime").toString())
-        // );
+        String region = call.argument("region");
+        String appid = call.argument("appid");
+        String bucket = call.argument("bucket");
+        final String cosPath = call.argument("cosPath");
+
+        QCloudCredentialProvider credentialProvider = new ShortTimeCredentialProvider(call.<String>argument("secretId"), call.<String>argument("secretKey"), 300);
+        TransferConfig transferConfig = new TransferConfig.Builder().build();
+        CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true);
+        builder.setSocketTimeout(10000);
+        //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
+        CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig(builder);
+        CosXmlService cosXmlService = new CosXmlService(registrar.context(), serviceConfig, credentialProvider);
+        //初始化 TransferManager
+        TransferManager transferManager = new TransferManager(cosXmlService, transferConfig);
+
         final String localPath = call.argument("localPath");
 
-    //上传文件
+        //上传文件
         COSXMLUploadTask cosxmlUploadTask = transferManager.upload(bucket, cosPath, localPath, null);
+        uploads.put(cosPath, cosxmlUploadTask);
 
         final HashMap<String, Object> data = new HashMap<>();
         data.put("localPath", localPath);
@@ -125,6 +123,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
             @Override
             public void onSuccess(CosXmlRequest request, CosXmlResult httPesult) {
                 Log.i(TAG, "Success: " + httPesult.printResult());
+                uploads.remove(cosPath);
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -135,7 +134,8 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
 
             @Override
             public void onFail(CosXmlRequest request, CosXmlClientException exception, CosXmlServiceException serviceException) {            
-                final HashMap<String, Object> error = new HashMap<>();               
+                final HashMap<String, Object> error = new HashMap<>();
+                uploads.remove(cosPath);
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -147,6 +147,21 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
             }
         });
     } else if (call.method.equals("TencentCos.downloadFile")) {
+        String region = call.argument("region");
+        String appid = call.argument("appid");
+        String bucket = call.argument("bucket");
+        final String cosPath = call.argument("cosPath");
+
+        QCloudCredentialProvider credentialProvider = new ShortTimeCredentialProvider(call.<String>argument("secretId"), call.<String>argument("secretKey"), 300);
+        TransferConfig transferConfig = new TransferConfig.Builder().build();
+        CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true);
+        builder.setSocketTimeout(10000);
+        //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
+        CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig(builder);
+        CosXmlService cosXmlService = new CosXmlService(registrar.context(), serviceConfig, credentialProvider);
+        //初始化 TransferManager
+        TransferManager transferManager = new TransferManager(cosXmlService, transferConfig);
+
         String saveDir = call.argument("saveDir");
         final String fileName = call.argument("fileName");
         //下载文件
@@ -194,7 +209,21 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
                 });
             }
         });
-      } else {
+    } else if (call.method.equals("TencentCos.cancelUpload")) {
+        final String cosPath = call.argument("cosPath");
+        COSXMLUploadTask cosxmlUploadTask = uploads.get(cosPath);
+        if (cosxmlUploadTask != null) {
+            cosxmlUploadTask.cancel();
+            uploads.remove(cosPath);
+        }
+        // ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         final HashMap<String, Object> data = new HashMap<>();
+        //         result.success(data);
+        //     }
+        // });
+    }else {
         result.notImplemented();
     }
   }

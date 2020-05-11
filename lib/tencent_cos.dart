@@ -35,6 +35,11 @@ class TencentCos {
       'localPath': localPath,
     });
   }
+
+  //取消上传
+  static Future<dynamic> cancelUpload (String cosPath) {
+    return _channel.invokeMethod<dynamic>('TencentCos.cancelUpload',{'cosPath': cosPath});
+  }
   
   //cosPath:并非完整路径，而是dev/fileName.fileType
   //saveDir存储的文件夹路径
