@@ -7,6 +7,7 @@
 
 @property (nonatomic, strong)NSDictionary *arguments;
 @property (nonatomic, strong)FlutterMethodChannel *channel;
+@property (nonatomic, strong)NSMutableDictionary *uploads;
 - (id)initWithChannel:(FlutterMethodChannel *)channel;
 @end
 
@@ -25,6 +26,7 @@
     if (self = [super init]) {
 
         self.channel = channel;
+        self.uploads = [NSMutableDictionary new];
 
     }
     return self;
@@ -48,16 +50,17 @@
     configuration.appID = appid;
 
     configuration.signatureProvider = self;
+    configuration.timeoutInterval = 10000;
     QCloudCOSXMLEndPoint* endpoint = [[QCloudCOSXMLEndPoint alloc] init];
     endpoint.regionName = region;//服务地域名称，可用的地域请参考注释
     configuration.endpoint = endpoint;
-    configuration.timeoutInterval = 10000;
 
     [QCloudCOSXMLService registerDefaultCOSXMLWithConfiguration:configuration];
     [QCloudCOSTransferMangerService registerDefaultCOSTransferMangerWithConfiguration:configuration];
 
     //上传文件
     QCloudCOSXMLUploadObjectRequest* put = [QCloudCOSXMLUploadObjectRequest new];
+      [_uploads setValue:put forKey:cosPath];
 
     put.object = cosPath;
     put.bucket = bucket;
@@ -80,16 +83,18 @@
         [data setValue:cosPath forKey:@"cosPath"];
         if(error.code == 0){
 //            [self.channel invokeMethod:@"onSuccess" arguments:data];
+            [self->_uploads removeObjectForKey:cosPath];
             result(data);
         }else{
-            NSMutableDictionary *err = [NSMutableDictionary dictionary];
-            result(err);
+            [data setValue: error.domain forKey:@"message"];
+            [self->_uploads removeObjectForKey:cosPath];
+            result(FlutterMethodNotImplemented);
 //            [self.channel invokeMethod:@"onFailed" arguments:data];
         }
 
     }];
     [[QCloudCOSTransferMangerService defaultCOSTransferManager] UploadObject:put];
-  } else if ([@"TencentCos.downloadFile" isEqualToString:call.method]) { 
+  } else if ([@"TencentCos.downloadFile" isEqualToString:call.method]) {
       self.arguments =   [call arguments];
 //      NSString *appid = self.arguments[@"appid"];
 //      NSString *region = self.arguments[@"region"];
@@ -144,6 +149,16 @@
           [data setValue:c forKey:@"progress"];
           [self.channel invokeMethod:@"onDownLoadProgress" arguments:data];
       }];
+  } else if ([@"TencentCos.cancelUpload" isEqualToString:call.method]) {
+      self.arguments =  [call arguments];
+      NSString *cosPath = self.arguments[@"cosPath"];
+      QCloudCOSXMLUploadObjectRequest* put = [_uploads objectForKey:cosPath];
+      NSError* error;
+      QCloudCOSXMLUploadObjectResumeData resumeData = [put cancelByProductingResumeData:&error];
+      QCloudCOSXMLUploadObjectRequest* request = nil;
+      if (resumeData) {
+          request = [QCloudCOSXMLUploadObjectRequest requestWithRequestData:resumeData];
+      }
   }else {
     result(FlutterMethodNotImplemented);
   }
