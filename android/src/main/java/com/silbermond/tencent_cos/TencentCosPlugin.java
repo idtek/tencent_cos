@@ -84,7 +84,7 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
 
         QCloudCredentialProvider credentialProvider = new ShortTimeCredentialProvider(call.<String>argument("secretId"), call.<String>argument("secretKey"), 300);
         TransferConfig transferConfig = new TransferConfig.Builder().build();
-        CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true);
+        CosXmlServiceConfig.Builder builder = new CosXmlServiceConfig.Builder().setAppidAndRegion(appid, region).setDebuggable(false).isHttps(true).setEndpointSuffix("cos.accelerate.myqcloud.com");
         builder.setSocketTimeout(10000);
         //创建 CosXmlServiceConfig 对象，根据需要修改默认的配置参数
         CosXmlServiceConfig serviceConfig = new CosXmlServiceConfig(builder);

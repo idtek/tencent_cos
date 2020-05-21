@@ -53,6 +53,7 @@
     configuration.timeoutInterval = 10000;
     QCloudCOSXMLEndPoint* endpoint = [[QCloudCOSXMLEndPoint alloc] init];
     endpoint.regionName = region;//服务地域名称，可用的地域请参考注释
+    endpoint.suffix = @"cos.accelerate.myqcloud.com";
     configuration.endpoint = endpoint;
 
     [QCloudCOSXMLService registerDefaultCOSXMLWithConfiguration:configuration];
