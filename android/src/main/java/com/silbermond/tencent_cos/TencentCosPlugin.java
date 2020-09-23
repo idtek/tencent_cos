@@ -200,10 +200,11 @@ public class TencentCosPlugin implements FlutterPlugin, MethodCallHandler {
 
             @Override
             public void onFail(CosXmlRequest request, CosXmlClientException exception, CosXmlServiceException serviceException) {
+                final HashMap<String, Object> data = new HashMap<>();
                 ((Activity) registrar.activeContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        result.error("failed", "failed", "failed");
+                        result.success(data);
                         Log.i("tencentCos", "onFail:--------- ");
                     }
                 });
